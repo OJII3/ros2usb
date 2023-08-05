@@ -5,11 +5,20 @@
 cmake_minimum_required(VERSION 3.8)
 project(ros2usb)
 
+# add extension for generating messages and services
+
 # find dependencies
 find_package(ament_cmake_auto REQUIRED)
+# find_package(rosidl_default_generators REQUIRED)
+
 ament_auto_find_build_dependencies()
-ament_auto_add_library(${PROJECT_NAME} SHARED src/ros2usb.cpp)
-ament_auto_add_executable(${PROJECT_NAME}_node src/ros2usb.cpp) # ros2usb_node というノードを直接実行できるようにする
+ament_auto_add_library(${PROJECT_NAME}_lib SHARED src/ros2usb.cpp)
+ament_auto_add_executable(${PROJECT_NAME}_bin src/ros2usb.cpp)
+ament_auto_generate_code()
+
+# rosidl_generate_interfaces(${PROJECT_NAME}_interfaces
+#   "msg/USBPacket.msg"
+#   DEPENDENCIES std_msgs)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
