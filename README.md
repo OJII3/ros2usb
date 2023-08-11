@@ -18,7 +18,30 @@ ROS2 のワークスペースの`src`ディレクトリにこのリポジトリ�
 
 ## Usage
 
-`ros2 run ros2usb ros2usb_node`を実行して Node を起動してください。
+### Setup for Serial Port
+
+マイコンとつなぎます。
+
+```bash
+ls -l /dev/serial/by-id/
+```
+
+以下のように表示されます。
+
+```bash
+lrwxrwxrwx 1 root root 13 Aug  9 17:48 usb-STMicroelectronics_STM32_STLink_0670FF554849844987183740-if02 -> ../../ttyACM0
+```
+
+マイコンと通信するために、ポートの権限を変更します。
+
+```bash
+sudo chmod 666 /dev/ttyACM0
+```
+
+でシリアルポートのデバイス名を確認してください。
+`/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AH06ZJ8L-if00-port0`のようなデバイス名が表示されます。
+
+`ros2 run ros2usb ros2usb_bin`を実行して Node を起動してください。
 
 ---
 

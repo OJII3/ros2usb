@@ -2,6 +2,8 @@
 
 #include <bits/stdc++.h>
 #include <fcntl.h>
+#include <rclcpp/duration.hpp>
+#include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/byte_multi_array.hpp>
 #include <termios.h>
@@ -19,13 +21,10 @@ public:
 private:
   void topic_callback(const std_msgs::msg::ByteMultiArray &msg);
   rclcpp::Subscription<std_msgs::msg::ByteMultiArray>::SharedPtr subscription_;
+  rclcpp::Publisher<std_msgs::msg::ByteMultiArray>::SharedPtr publisher_;
   constexpr static const std::array<char, 2> header = {'S', 'S'};
   constexpr static const std::array<char, 2> footer = {'E', 'E'};
   int fd_;
-  /* ros::NodeHandle nh_; */
-  /* ros::NodeHandle nh_local_; */
-  std::string device_ = "/dev/ttyUSB0";
-  int baudrate_ = B115200;
-  /* ros::Publisher pub_; */
-  /* ros::Subscriber sub_; */
+  std::string device_default = "/dev/ttyACM0";
+  int baudrate_default = B115200;
 };
