@@ -38,13 +38,16 @@ lrwxrwxrwx 1 root root 13 Aug  9 17:48 usb-STMicroelectronics_STM32_STLink_0670F
 sudo chmod 666 /dev/ttyACM0
 ```
 
-でシリアルポートのデバイス名を確認してください。
-`/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AH06ZJ8L-if00-port0`のようなデバイス名が表示されます。
-
 `ros2 run ros2usb ros2usb_bin`を実行して Node を起動してください。
 
 ---
 
 [^1]:
     VSCode + ROS 拡張以外の環境で補完等を利用するには, clangd の arguments に`--enable-config`を追加, ros2 のワークスペースのルートに`.clangd`ファイルを作成し、`CompilationDatabase: ./build`を記述.
-    `colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=1`を実行すると、`build`ディレクトリに`compile_commands.json`が生成される.
+
+    ```bash
+    colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+
+    ```
+
+    を実行すると、`build`ディレクトリに`compile_commands.json`が生成される.

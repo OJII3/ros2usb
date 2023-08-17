@@ -1,17 +1,17 @@
 #include "ros2usb.hpp"
 
 using namespace std;
-using std::placeholders::_1;
+using placeholders::_1;
 
 template <typename To, typename From> To bit_cast(const From &from) noexcept {
   To result;
-  std::memcpy(&result, &from, sizeof(To));
+  memcpy(&result, &from, sizeof(To));
   return result;
 }
 
 ROS2USB::ROS2USB() : Node("ros2usb") {
   subscription_ = this->create_subscription<std_msgs::msg::ByteMultiArray>(
-      "ros2usb", 10, std::bind(&ROS2USB::topic_callback, this, _1));
+      "ros2usb", 10, bind(&ROS2USB::topic_callback, this, _1));
   publisher_ =
       this->create_publisher<std_msgs::msg::ByteMultiArray>("usb2ros", 10);
 }
@@ -39,6 +39,8 @@ void ROS2USB::config() {
  * @brief use rosparam
  */
 void ROS2USB::parameterSetting() {
+  // load ros parameter so that you can change device and baudrate without
+  // changing code
   this->declare_parameter("device", device_default);
   this->declare_parameter("baudrate", baudrate_default);
 }
@@ -80,26 +82,30 @@ int ROS2USB::openUSBSerial() {
  * @param msg
  */
 void ROS2USB::sendToMicon(const std_msgs::msg::ByteMultiArray::SharedPtr &msg) {
-  std::array<std::byte, 41> raw_packet;
+  array<byte, 41> raw_packet;
   auto header_size = header.size();
   /* auto id_size = sizeof(msg->id); */
   auto id_size = 4;
   /* auto packet_size = msg->packet.data.size(); */
   auto packet_size = msg->data.size();
   auto footer_size = footer.size();
+  cout << "header_size: " << header_size << endl;
   if (packet_size > 36) {
     RCLCPP_ERROR_STREAM(this->get_logger(), "Packet size is too large");
     return;
   }
-  std::memcpy(raw_packet.data(), header.data(), header_size);
-  /* std::memcpy(raw_packet.data() + header_size, &msg->id, id_size); */
-  std::memcpy(raw_packet.data() + header_size, (int *)1, id_size);
-  /* std::memcpy(raw_packet.data() + header_size + id_size, */
+  cout << "id_size: " << id_size << endl;
+  memcpy(raw_packet.data(), header.data(), header_size);
+  /* memcpy(raw_packet.data() + header_size, &msg->id, id_size); */
+  /* memcpy(raw_packet.data() + header_size, (int *)1, id_size); */
+  /* cout << "packet_size: " << packet_size << endl; */
+  /* memcpy(raw_packet.data() + header_size + id_size, */
   /*             msg->packet.data.data(), packet_size); */
-  std::memcpy(raw_packet.data() + header_size + id_size, msg->data.data(),
-              packet_size);
-  std::memcpy(raw_packet.data() + header_size + id_size + packet_size,
-              footer.data(), footer_size);
+  /* memcpy(raw_packet.data() + header_size + id_size, msg->data.data(), */
+  /*        packet_size); */
+  /* memcpy(raw_packet.data() + header_size + id_size + packet_size,
+   * footer.data(), */
+  /*        footer_size); */
   int rec = write(fd_, reinterpret_cast<char *>(raw_packet.data()),
                   raw_packet.size());
   if (rec < 0) {
@@ -116,7 +122,7 @@ void ROS2USB::topic_callback(const std_msgs::msg::ByteMultiArray &msg) {
  * @todo multi packet support
  */
 void ROS2USB::sendToNode() {
-  std::array<std::byte, 1024> buf;
+  array<byte, 1024> buf;
   auto len = read(fd_, buf.data(), 1024);
   if (len < 6)
     return;
@@ -130,22 +136,4 @@ void ROS2USB::sendToNode() {
   // TODO: assign data
   memcpy(msg.data.data(), buf.data() + 3, len - 5);
   publisher_->publish(msg);
-}
-
-int main(int argc, char **argv) {
-  rclcpp::init(argc, argv);
-  auto ros2usb_node = std::make_shared<ROS2USB>();
-
-  try {
-    RCLCPP_INFO(ros2usb_node->get_logger(), "Initializing node...");
-    ros2usb_node->config();
-    RCLCPP_INFO(ros2usb_node->get_logger(), "Node initialized");
-    rclcpp::spin(ros2usb_node);
-  } catch (const char *s) {
-    RCLCPP_FATAL_STREAM(ros2usb_node->get_logger(), "" << s);
-  } catch (...) {
-    RCLCPP_FATAL_STREAM(ros2usb_node->get_logger(), "Unexpected error");
-  }
-
-  return 0;
 }
