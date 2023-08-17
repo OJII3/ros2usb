@@ -47,4 +47,10 @@ sudo chmod 666 /dev/ttyACM0
 
 [^1]:
     VSCode + ROS 拡張以外の環境で補完等を利用するには, clangd の arguments に`--enable-config`を追加, ros2 のワークスペースのルートに`.clangd`ファイルを作成し、`CompilationDatabase: ./build`を記述.
-    `colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=1`を実行すると、`build`ディレクトリに`compile_commands.json`が生成される.
+
+    ```
+    colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+
+    ```
+
+    を実行すると、`build`ディレクトリに`compile_commands.json`が生成される.
