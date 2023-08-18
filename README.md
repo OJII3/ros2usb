@@ -10,47 +10,47 @@
 ## Prerequisites
 
 - ROS2 Humble (Arch Linux でのみ動作確認済み)
+- `~/.bashrc`に以下が記述されていること
+
+```bash
+ source /opt/ros/humble/setup.bash
+ source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash
+ source ./install/setup.bash
+```
 
 ## Build
 
 1. ROS2 のワークスペースの`src`ディレクトリにこのリポジトリをクローンしてください。
 
-2. ワークスペースのルートに戻り、以下のコマンドをあらかじめ実行してください。(bash の場合は`.bash`に置き換えてください。`.bashrc`などに記述しておくことをおすすめします。)
+2. ワークスペースのルートに戻り、`colcon build`を実行してください。
 
-```sh
- source /opt/ros/humble/setup.zsh
- source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.zsh
- source ./install/setup.zsh
-```
+## Setup
 
-3. `colcon build`を実行してください[^1]。
-
-## Usage
-
-### Setup for Serial Port
-
-マイコンとつなぎます。
+1. マイコンと USB typeA - USB typeB でつなぎます。
+2. シリアルポートのデバイス名を確認します。
 
 ```bash
 ls -l /dev/serial/by-id/
 ```
 
-以下のように表示されます。
+`lrwxrwxrwx 1 root root 13 Aug  9 17:48 usb-STMicroelectronics_STM32_STLink_0670FF554849844987183740-if02 -> ../../ttyACM0`のように表示されます。
 
-```bash
-lrwxrwxrwx 1 root root 13 Aug  9 17:48 usb-STMicroelectronics_STM32_STLink_0670FF554849844987183740-if02 -> ../../ttyACM0
-```
-
-マイコンと通信するために、ポートの権限を変更します。
+3. マイコンと通信するために、ポートの権限を変更します。
 
 ```bash
 sudo chmod 666 /dev/ttyACM0
 ```
 
-でシリアルポートのデバイス名を確認してください。
-`/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AH06ZJ8L-if00-port0`のようなデバイス名が表示されます。
+## Run
 
-`ros2 run ros2usb ros2usb_bin`を実行して Node を起動してください。
+```bash
+ros2 run ros2usb ros2usb_bin
+```
+
+を実行して Node を起動できます。
+
+- `micon2ros`トピックのデータをマイコンに送信します.
+- マイコンからのデータは`micon2ros`トピックへ publish されます.
 
 ---
 

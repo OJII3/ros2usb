@@ -5,15 +5,18 @@ using std::placeholders::_1;
 
 template <typename To, typename From> To bit_cast(const From &from) noexcept {
   To result;
-  std::memcpy(&result, &from, sizeof(To));
+  memcpy(&result, &from, sizeof(To));
   return result;
 }
 
 ROS2USB::ROS2USB() : Node("ros2usb") {
-  subscription_ = this->create_subscription<std_msgs::msg::ByteMultiArray>(
-      "ros2usb", 10, std::bind(&ROS2USB::topic_callback, this, _1));
+  constexpr auto sub_topic_name = "ros2micon";
+  constexpr auto pub_topic_name = "micon2ros";
+
+  subscription_ = this->create_subscription<ros2usb_msgs::msg::USBPacket>(
+      sub_topic_name, 10, bind(&ROS2USB::topic_callback, this, _1));
   publisher_ =
-      this->create_publisher<std_msgs::msg::ByteMultiArray>("usb2ros", 10);
+      this->create_publisher<ros2usb_msgs::msg::USBPacket>(pub_topic_name, 10);
 }
 
 ROS2USB::~ROS2USB() { close(fd_); }
@@ -79,27 +82,22 @@ int ROS2USB::openUSBSerial() {
  * @brief subscribe packet from node and send packet to micon
  * @param msg
  */
-void ROS2USB::sendToMicon(const std_msgs::msg::ByteMultiArray::SharedPtr &msg) {
-  std::array<std::byte, 41> raw_packet;
+void ROS2USB::sendToMicon(const ros2usb_msgs::msg::USBPacket::SharedPtr &msg) {
+  array<byte, 41> raw_packet;
   auto header_size = header.size();
-  /* auto id_size = sizeof(msg->id); */
-  auto id_size = 4;
-  /* auto packet_size = msg->packet.data.size(); */
-  auto packet_size = msg->data.size();
+  auto id_size = sizeof(msg->id);
+  auto packet_size = msg->packet.data.size();
   auto footer_size = footer.size();
   if (packet_size > 36) {
     RCLCPP_ERROR_STREAM(this->get_logger(), "Packet size is too large");
     return;
   }
-  std::memcpy(raw_packet.data(), header.data(), header_size);
-  /* std::memcpy(raw_packet.data() + header_size, &msg->id, id_size); */
-  std::memcpy(raw_packet.data() + header_size, (int *)1, id_size);
-  /* std::memcpy(raw_packet.data() + header_size + id_size, */
-  /*             msg->packet.data.data(), packet_size); */
-  std::memcpy(raw_packet.data() + header_size + id_size, msg->data.data(),
-              packet_size);
-  std::memcpy(raw_packet.data() + header_size + id_size + packet_size,
-              footer.data(), footer_size);
+  memcpy(raw_packet.data(), header.data(), header_size);
+  memcpy(raw_packet.data() + header_size, &msg->id, id_size);
+  memcpy(raw_packet.data() + header_size + id_size, msg->packet.data.data(),
+         packet_size);
+  memcpy(raw_packet.data() + header_size + id_size + packet_size, footer.data(),
+         footer_size);
   int rec = write(fd_, reinterpret_cast<char *>(raw_packet.data()),
                   raw_packet.size());
   if (rec < 0) {
@@ -107,8 +105,8 @@ void ROS2USB::sendToMicon(const std_msgs::msg::ByteMultiArray::SharedPtr &msg) {
   }
 }
 
-void ROS2USB::topic_callback(const std_msgs::msg::ByteMultiArray &msg) {
-  this->sendToMicon(std::make_shared<std_msgs::msg::ByteMultiArray>(msg));
+void ROS2USB::topic_callback(const ros2usb_msgs::msg::USBPacket &msg) {
+  this->sendToMicon(std::make_shared<ros2usb_msgs::msg::USBPacket>(msg));
 }
 
 /**
@@ -116,7 +114,7 @@ void ROS2USB::topic_callback(const std_msgs::msg::ByteMultiArray &msg) {
  * @todo multi packet support
  */
 void ROS2USB::sendToNode() {
-  std::array<std::byte, 1024> buf;
+  array<std::byte, 1024> buf;
   auto len = read(fd_, buf.data(), 1024);
   if (len < 6)
     return;
@@ -126,8 +124,8 @@ void ROS2USB::sendToNode() {
   if (buf[len - 2] != bit_cast<byte>(footer[0]) ||
       buf[len - 1] != bit_cast<byte>(footer[1]))
     return;
-  std_msgs::msg::ByteMultiArray msg;
+  ros2usb_msgs::msg::USBPacket msg;
   // TODO: assign data
-  memcpy(msg.data.data(), buf.data() + 3, len - 5);
+  memcpy(msg.packet.data.data(), buf.data() + 3, len - 5);
   publisher_->publish(msg);
 }
