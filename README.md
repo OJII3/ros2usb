@@ -9,12 +9,21 @@
 
 ## Prerequisites
 
-- ROS2 Humble
+- ROS2 Humble (Arch Linux でのみ動作確認済み)
 
 ## Build
 
-ROS2 のワークスペースの`src`ディレクトリにこのリポジトリをクローンしてください。
-その後、ワークスペースのルートに戻り、`colcon build`を実行してください[^1]。
+1. ROS2 のワークスペースの`src`ディレクトリにこのリポジトリをクローンしてください。
+
+2. ワークスペースのルートに戻り、以下のコマンドをあらかじめ実行してください。(bash の場合は`.bash`に置き換えてください。`.bashrc`などに記述しておくことをおすすめします。)
+
+```sh
+ source /opt/ros/humble/setup.zsh
+ source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.zsh
+ source ./install/setup.zsh
+```
+
+3. `colcon build`を実行してください[^1]。
 
 ## Usage
 
