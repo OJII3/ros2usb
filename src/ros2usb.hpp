@@ -24,9 +24,7 @@ class ROS2USB : public rclcpp::Node {
   ROS2USB &operator=(ROS2USB &&) = delete;
   ~ROS2USB() override;
   void config();
-  void parameterSetting();
-  int openUSBSerial();
-  void sendToMicon(const ros2usb_msgs::msg::USBPacket::SharedPtr &msg);
+  void startLoop();
   void sendToNode();
 
  private:
@@ -42,4 +40,7 @@ class ROS2USB : public rclcpp::Node {
   int fd_;
 
   void topicCallback(const ros2usb_msgs::msg::USBPacket &msg);
+  void sendToMicon(const ros2usb_msgs::msg::USBPacket::SharedPtr &msg);
+  void parameterSetting();
+  int openUSBSerial();
 };

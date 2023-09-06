@@ -19,15 +19,22 @@ ROS2USB::~ROS2USB() { close(fd_); }
 void ROS2USB::config() {
   parameterSetting();
   fd_ = openUSBSerial();
-  while (rclcpp::ok()) {
+  while (rclcpp::ok() && fd_ < 0) {
     RCLCPP_ERROR_STREAM(this->get_logger(), "Cannot open USB serial");
     fd_ = openUSBSerial();
-    rclcpp::sleep_for(std::chrono::seconds(1));
     if (fd_ > 0) {
       break;
     }
+    rclcpp::sleep_for(std::chrono::seconds(1));
   }
   RCLCPP_INFO_STREAM(this->get_logger(), "USB serial opened");
+}
+
+void ROS2USB::startLoop() {
+  while (rclcpp::ok()) {
+    sendToNode();
+    rclcpp::sleep_for(std::chrono::milliseconds(3));
+  }
 }
 
 /**
@@ -93,6 +100,8 @@ void ROS2USB::sendToMicon(const ros2usb_msgs::msg::USBPacket::SharedPtr &msg) {
   int rec = write(fd_, raw_packet.data(), raw_packet.size());
   if (rec < 0) {
     RCLCPP_ERROR_STREAM(this->get_logger(), "Cannot write to USB serial");
+  } else {
+    RCLCPP_INFO_STREAM(this->get_logger(), "Write to USB serial");
   }
 }
 
@@ -114,5 +123,6 @@ void ROS2USB::sendToNode() {
     msg.id.data = buf[2];
     copy(buf.begin() + 3, buf.end() - 2, msg.packet.data.begin());
     publisher_->publish(msg);
+    RCLCPP_INFO_STREAM(this->get_logger(), "Publish to ROS2");
   }
 }
